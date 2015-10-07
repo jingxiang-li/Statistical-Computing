@@ -41,3 +41,4 @@ vignettes/*.pdf
 *.out
 *.synctex.gz
 *.tex
+.Rproj.user
