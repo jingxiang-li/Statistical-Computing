@@ -1,0 +1,194 @@
+%!TEX program = pdflatex
+%# -*- coding: utf-8 -*-
+%!TEX encoding = UTF-8 Unicode
+
+\documentclass[12pt,oneside,a4paper]{article}
+
+%% ------------------------------------------------------
+%% load packages
+\usepackage{geometry}
+\geometry{verbose,tmargin=2cm,bmargin=2cm,lmargin=2cm,rmargin=2cm}
+\usepackage[pdfusetitle,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=2,
+ breaklinks=false,pdfborder={0 0 1},backref=false,colorlinks=false,
+ unicode=true]
+ {hyperref}
+\hypersetup{pdfstartview={XYZ null null 1}}
+\usepackage{url}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{microtype}
+
+\usepackage{amsmath, amsthm, amssymb, amsfonts}
+\usepackage[retainorgcmds]{IEEEtrantools}
+
+% \usepackage{algorithm}
+% \usepackage{algorithmic}
+% \renewcommand{\algorithmicrequire}{\textbf{Input:}} 
+% \renewcommand{\algorithmicensure}{\textbf{Output:}} 
+\usepackage[algoruled, vlined]{algorithm2e}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[mono=false]{libertine}
+\usepackage[libertine]{newtxmath}
+\linespread{1.1} 
+% \usepackage[toc,eqno,enum,bib,lineno]{tabfigures}
+
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage[figure]{hypcap}
+\usepackage[hypcap]{caption}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+%\usepackage{grffile} 
+%\usepackage{float} 
+\usepackage{pdfpages}
+\usepackage{pdflscape}
+\usepackage{needspace}
+
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{dcolumn}
+\usepackage{tabu}
+
+\usepackage{verbatim}
+
+\usepackage{etoolbox}
+\BeforeBeginEnvironment{knitrout}{
+    \begin{tabu} to \textwidth {XcX}
+    \toprule[.7pt]
+    & R Code Chunk & \\
+    \bottomrule[.7pt]
+    \end{tabu}
+    \vspace*{-.5\baselineskip}
+}
+\AfterEndEnvironment{knitrout}{
+    \vspace*{-.5\baselineskip}
+    \noindent\rule{\textwidth}{.7pt}
+}
+
+%% Class, Exam, Date, etc.
+\newcommand{\class}{STAT 5701: Statistical Computing}
+\newcommand{\term}{Fall 2015}
+\newcommand{\examnum}{Homework 2}
+\newcommand{\hmwkTitle}{\class \\[1ex] \examnum}
+\newcommand{\hmwkAuthorName}{Jingxiang Li}
+
+\title{\hmwkTitle}
+\author{\hmwkAuthorName}
+
+\usepackage{fancyhdr}
+\usepackage{extramarks}
+\lhead{\hmwkAuthorName}
+\chead{}
+\rhead{\hmwkTitle}
+\cfoot{\thepage}
+
+\newcounter{problemCounter}
+\newcounter{subproblemCounter}
+\renewcommand{\thesubproblemCounter}{\alph{subproblemCounter}}
+\newcommand{\problem}[0] {
+    \clearpage
+    \stepcounter{problemCounter}
+    \setcounter{subproblemCounter}{0}
+}
+
+\newcommand{\subproblem}[0] {
+    \stepcounter{subproblemCounter}
+    \Needspace*{15\baselineskip}
+    \vspace{1.8\baselineskip}
+    \noindent{\textbf{\large{Problem \theproblemCounter.\hspace{1pt}\thesubproblemCounter}}}
+    \vspace{\baselineskip}
+    \newline
+}
+
+\newcommand{\solution} {
+    \vspace{15pt}
+    \noindent\ignorespaces\textbf{\large Solution}\par
+}
+\setlength\parindent{0pt}
+
+%% some math shortcuts
+\newcommand{\m}[1]{\texttt{{#1}}}
+\newcommand{\E}[0]{\mathrm{E}}
+\newcommand{\Var}[0]{\mathrm{Var}}
+\newcommand{\sd}[0]{\mathrm{sd}}
+\newcommand{\Cov}[0]{\mathrm{Cov}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+<<include=FALSE>>=
+opts_chunk$set(fig.path='figure/', fig.align='center', fig.show='hold', tidy=FALSE, tidy.opts=list(keep.blank.line=TRUE, width.cutoff=50), warning=FALSE, error=FALSE, message=FALSE, echo=TRUE, crop = TRUE, cache=TRUE, size="footnotesize")
+#, sanitize=TRUE, dev="tikz")
+options(replace.assign=TRUE, width=90)
+knit_theme$set("edit-eclipse")
+knit_hooks$set(document = function(x) {
+    sub('\\usepackage[]{color}', '\\usepackage[]{xcolor}', x, fixed = TRUE) 
+}, crop = hook_pdfcrop)
+@
+\maketitle
+
+Note that if $u \sim \mathrm{Unif}(0, 1)$, $\mathrm{P}(u < \alpha) = \alpha, ~\forall \alpha \in [0, 1]$. 
+
+Let $p$ be the p-value, under $H_{0}$ we have
+\begin{equation*}
+\begin{aligned}
+    & \mathrm{P}(p < \alpha)\\
+    =~ & \mathrm{P}(t > T_{1 - \alpha / 2} ~ \mathrm{or} ~ t < T_{\alpha / 2})\\
+    =~ & \mathrm{P}(t > T_{1 - \alpha / 2}) + \mathrm{P}(t < T_{\alpha / 2})\\
+    =~ & \alpha / 2 + \alpha / 2 \\
+    =~ & \alpha
+\end{aligned}
+\end{equation*}
+i.e., $\forall \alpha \in [0, 1]$ $\mathrm{P}(p < \alpha) = \alpha$, which implies that p-value has a uniform distribution under $H_{0}$.
+
+=================================
+
+\begin{equation*}
+\begin{aligned}
+    l(x_{i}|\mu) &= \log L(x_{i}|\mu) = -\log\mu - \frac{x}{\mu}\\
+    \Rightarrow l(x|\mu) &= \sum_{i = 1}^{n}{l(x_{i}|\mu)} = -n\log\mu - n\frac{\bar{x}}{\mu}
+\end{aligned}
+\end{equation*}
+Then set
+\begin{equation*}
+\begin{aligned}
+    & \frac{\partial}{\partial \mu} l(x|\mu) = 0\\
+    \Rightarrow & - \frac{1}{\mu} + \frac{\bar{x}}{\mu^2} = 0\\
+    \Rightarrow & \hat{\mu} = \bar{x}
+\end{aligned}
+\end{equation*}
+
+==================================
+
+\begin{equation*}
+\begin{aligned}
+    & & L(a) &= \E\{(a\bar{x} - \mu)^2\} \\
+    &\Rightarrow & L(a) &= \E\{(a(\bar{x} - E(\bar{x})) + a \E(\bar{x}) - \mu)^2\} \\
+    &\Rightarrow & L(a) &= \E\{a^2(\bar{x} - E(\bar{x}))^2\} + \E\{(a\E(\bar{x}) - mu)^2 \} \\
+    &\Rightarrow & L(a) &= a^2 \Var(\bar{x}) + a^2 \mu^2 - 2a \mu^2 + \mu^2\\
+    & \Rightarrow & L(a) &= a^2 \frac{\mu^2}{n} + a^2 \mu^2 - 2a \mu^2 + \mu^2
+\end{aligned}
+\end{equation*}
+
+Then set 
+\begin{equation*}
+\begin{aligned}
+    & & &\frac{\partial}{\partial a}L(a) = 0\\
+    &\Rightarrow& &2a\frac{\mu^2}{n} + 2a\mu^2 - 2\mu^2 = 0\\
+    &\Rightarrow& &\hat{a} = \frac{\mu^2}{\frac{\mu^2}{n} + \mu^2} = \frac{n}{n + 1}
+\end{aligned}
+\end{equation*}
+
+===============================
+
+\begin{equation*}
+\begin{aligned}
+    \E\{(\bar{x} - \mu)^2\} &= \Var(\bar{x}) = \frac{\mu^2}{n} \\
+    \E\{(a\bar{x} - \mu)^2\} &= a^2 \Var(\bar{x}) + (a\mu - \mu)^2 = \frac{1}{n + 1}\mu^2
+\end{aligned}
+\end{equation*}
+\end{document}

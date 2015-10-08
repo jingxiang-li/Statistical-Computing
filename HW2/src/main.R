@@ -170,8 +170,204 @@ for (n in n_vec)
     for (alpha in alpha_vec) {
         result[k, 1] = n
         result[k, 2] = alpha
-        result[k, c(3, 4)] = 
+        result[k, c(3, 4)] =
             sim_confint_sigma_sq_multinorm(reps, n, mu, sigma, rho, alpha, score_conf)
         k = k + 1
     }
 result
+
+
+
+
+# 2 -----------------------------------------------------------------------
+
+
+sim_pval_ttest = function(reps, n1, n2, mu1, mu2, sigma1, sigma2) {
+    x1 = rnorm(reps * n1, mu1, sigma1)
+    x1 = matrix(x1, reps, n1)
+    x2 = rnorm(reps * n2, mu2, sigma2)
+    x2 = matrix(x2, reps, n2)
+    p_values = numeric(reps)
+    for (r in 1:reps) {
+        test_result = t.test(x1[r,], x2[r,], var.equal = TRUE)
+        p_values[r] = test_result$p.value
+    }
+    p_values
+}
+
+calc_power = function(pvals, alpha) {
+    sum(pvals > (1 - alpha / 2) | pvals < (alpha / 2)) / length(pvals)
+}
+
+## 2.a
+n1 = n2 = 50
+mu1 = mu2 = 68
+sigma1 = sigma2 = 3
+reps = 1000
+
+p_values = sim_pval_ttest(reps, n1, n2, mu1, mu2, sigma1, sigma2)
+hist(p_values)
+
+
+## 2.b
+n1 = n2 = 50
+mu1 = 68
+sigma1 = sigma2 = 3
+alpha = 0.05
+reps = 1000
+
+length_mu2 = 5
+mu2_vec = seq(from = mu1, by = 1, length.out = length_mu2)
+power_result = numeric(length_mu2)
+for (i in 1:length_mu2) {
+    p_values = sim_pval_ttest(reps, n1, n2, mu1, mu2_vec[i], sigma1, sigma2)
+    power_result[i] = calc_power(p_values, alpha)
+}
+mu2_vec[power_result < 1]
+
+## 2.c
+mu1 = 68
+mu2 = 68.5
+sigma1 = sigma2 = 3
+alpha = 0.05
+reps = 1000
+
+length_n = 10
+n_vec = seq(from = 1050, by = 20, length.out = length_n)
+power_result = numeric(length_n)
+for (i in 1:length_n) {
+    p_values = sim_pval_ttest(reps, n_vec[i], n_vec[i], mu1, mu2, sigma1, sigma2)
+    power_result[i] = calc_power(p_values, alpha)
+}
+n_vec[which.min(abs(power_result - 0.95))]
+
+## 2.d
+
+adam.qqplot = function (x.list, quant.func, ...) {
+    #     Draw qqplot (modified from Adam's code)
+    #     Input:
+    #         x.list: target sample
+    #         quant.func: quantile function for the target distribution
+    #         ...: parameters pass to the quant.func()
+    #     Output:
+    #         plot is generated
+    n <- length(x.list)
+    probs <- ppoints(n)
+    plot(
+        quant.func(probs, ...), quantile(x.list, probs),
+        xlab = "Expected percentile", ylab = "Data percentile",
+        main = "Q-Q Plot"
+    )
+    abline(0, 1)
+}
+
+#2.d.i
+
+n1 = n2 = 100
+mu1 = mu2 = 68
+sigma1 = 3
+sigma2 = 6
+reps = 1000
+
+p_values = sim_pval_ttest(reps, n1, n2, mu1, mu2, sigma1, sigma2)
+adam.qqplot(p_values, qunif)
+quantile(p_values, c(0.01, 0.05))
+
+#2.d.ii
+
+n1 = 20
+n2 = 100
+mu1 = mu2 = 68
+sigma1 = 3
+sigma2 = 6
+reps = 1000
+
+p_values = sim_pval_ttest(reps, n1, n2, mu1, mu2, sigma1, sigma2)
+adam.qqplot(p_values, qunif)
+quantile(p_values, c(0.01, 0.05))
+
+#2.d.iii
+
+n1 = 100
+n2 = 20
+mu1 = mu2 = 68
+sigma1 = 3
+sigma2 = 6
+reps = 1000
+
+p_values = sim_pval_ttest(reps, n1, n2, mu1, mu2, sigma1, sigma2)
+adam.qqplot(p_values, qunif)
+quantile(p_values, c(0.01, 0.05))
+
+##2.e
+
+sim_pval_ttest_multinorm = function(reps, n, mu1, mu2, sigma, rho) {
+    mu_vec = c(mu1, mu2)
+    var_mat = matrix(0, 2, 2)
+    var_mat[1, 1] = var_mat[2, 2] = sigma ^ 2
+    var_mat[1, 2] = var_mat[2, 1] = sigma ^ 2 * rho
+    p_values = numeric(reps)
+    for (r in 1:reps) {
+        data_xy = mvrnorm(n, mu_vec, var_mat)
+        test_result = t.test(data_xy[, 1], data_xy[, 2], var.equal = TRUE)
+        p_values[r] = test_result$p.value
+    }
+    p_values
+}
+
+#2.e.1
+
+n = 20
+mu1 = mu2 = 68
+sigma = 3
+rho = 0.01
+reps = 1000
+
+p_values = sim_pval_ttest_multinorm(reps, n, mu1, mu2, sigma, rho)
+adam.qqplot(p_values, qunif)
+quantile(p_values, c(0.01, 0.05))
+
+#2.e.2
+
+n = 20
+mu1 = mu2 = 68
+sigma = 3
+rho = 0.1
+reps = 1000
+
+p_values = sim_pval_ttest_multinorm(reps, n, mu1, mu2, sigma, rho)
+adam.qqplot(p_values, qunif)
+quantile(p_values, c(0.01, 0.05))
+
+
+# 3 -----------------------------------------------------------------------
+
+
+sim_diff_lkh_shk = function(reps, n, mu) {
+    x = rexp(reps * n, 1 / mu)
+    x = matrix(x, reps, n)
+    a = n / (n + 1)
+    erros = apply(x, 1, function(x, mu) {
+        c((mean(x) - mu) ^ 2, (a * mean(x) - mu) ^ 2)
+    }, mu)
+    apply(erros, 1, mean)
+}
+
+n_vec = c(5, 10, 50)
+mu_vec = c(0.5, 1, 10)
+reps = 1000
+
+result = matrix(0, length(n_vec) * length(mu_vec), 6)
+colnames(result) = c("n", "mu", "sim_lkh_err", "sim_shk_est",
+                     "lkh_err", "shk_est")
+k = 1
+for (n in n_vec)
+    for (mu in mu_vec) {
+        result[k, 1] = n
+        result[k, 2] = mu
+        result[k, c(3, 4)] = sim_diff_lkh_shk(reps, n, mu)
+        result[k, 5] = mu ^ 2 / n
+        result[k, 6] = mu ^ 2 / (n + 1)
+        k = k + 1
+    }
+round(result, 3)
