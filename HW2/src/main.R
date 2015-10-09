@@ -182,6 +182,18 @@ result
 # 2 -----------------------------------------------------------------------
 
 
+#' simulate p-values from a t-test scenario where two samples are drawn from 
+#' normal distribution
+#'
+#' @param reps number of replications for this simulation
+#' @param n1 sample size of sample #1
+#' @param n2 sample size of sample #2
+#' @param mu1 mean value of sample #1
+#' @param mu2 mean value of sample #2
+#' @param sigma1 standard deviation of sample #1
+#' @param sigma2 standard deviation of sample #2
+#'
+#' @return a vector of p-values calculated from a series of t-tests
 sim_pval_ttest = function(reps, n1, n2, mu1, mu2, sigma1, sigma2) {
     x1 = rnorm(reps * n1, mu1, sigma1)
     x1 = matrix(x1, reps, n1)
@@ -195,6 +207,12 @@ sim_pval_ttest = function(reps, n1, n2, mu1, mu2, sigma1, sigma2) {
     p_values
 }
 
+#' calculate the power of a test given a simulated p-value vector
+#'
+#' @param vector of simulated p-value based on the test 
+#' @param significance level to determine the rejection region
+#'
+#' @return the power of the test
 calc_power = function(pvals, alpha) {
     sum(pvals > (1 - alpha / 2) | pvals < (alpha / 2)) / length(pvals)
 }
@@ -223,6 +241,7 @@ for (i in 1:length_mu2) {
     p_values = sim_pval_ttest(reps, n1, n2, mu1, mu2_vec[i], sigma1, sigma2)
     power_result[i] = calc_power(p_values, alpha)
 }
+power_result[power_result < 1]
 mu2_vec[power_result < 1]
 
 ## 2.c
@@ -243,14 +262,14 @@ n_vec[which.min(abs(power_result - 0.95))]
 
 ## 2.d
 
+#' Draw qqplot (modified from Adam's code)
+#'
+#' @param x.list target sample
+#' @param quant.func quantile function for the target distribution
+#' @param ... parameters to be passed to the quant.func()
+#'
+#' @return no return value
 adam.qqplot = function (x.list, quant.func, ...) {
-    #     Draw qqplot (modified from Adam's code)
-    #     Input:
-    #         x.list: target sample
-    #         quant.func: quantile function for the target distribution
-    #         ...: parameters pass to the quant.func()
-    #     Output:
-    #         plot is generated
     n <- length(x.list)
     probs <- ppoints(n)
     plot(
@@ -270,7 +289,9 @@ sigma2 = 6
 reps = 1000
 
 p_values = sim_pval_ttest(reps, n1, n2, mu1, mu2, sigma1, sigma2)
+par(mfrow = c(1, 2))
 adam.qqplot(p_values, qunif)
+hist(p_values)
 quantile(p_values, c(0.01, 0.05))
 
 #2.d.ii
@@ -283,7 +304,9 @@ sigma2 = 6
 reps = 1000
 
 p_values = sim_pval_ttest(reps, n1, n2, mu1, mu2, sigma1, sigma2)
+par(mfrow = c(1, 2))
 adam.qqplot(p_values, qunif)
+hist(p_values)
 quantile(p_values, c(0.01, 0.05))
 
 #2.d.iii
@@ -296,7 +319,9 @@ sigma2 = 6
 reps = 1000
 
 p_values = sim_pval_ttest(reps, n1, n2, mu1, mu2, sigma1, sigma2)
+par(mfrow = c(1, 2))
 adam.qqplot(p_values, qunif)
+hist(p_values)
 quantile(p_values, c(0.01, 0.05))
 
 ##2.e
@@ -324,7 +349,9 @@ rho = 0.01
 reps = 1000
 
 p_values = sim_pval_ttest_multinorm(reps, n, mu1, mu2, sigma, rho)
+par(mfrow = c(1, 2))
 adam.qqplot(p_values, qunif)
+hist(p_values)
 quantile(p_values, c(0.01, 0.05))
 
 #2.e.2
@@ -336,13 +363,24 @@ rho = 0.1
 reps = 1000
 
 p_values = sim_pval_ttest_multinorm(reps, n, mu1, mu2, sigma, rho)
+par(mfrow = c(1, 2))
 adam.qqplot(p_values, qunif)
+hist(p_values)
 quantile(p_values, c(0.01, 0.05))
 
 
 # 3 -----------------------------------------------------------------------
 
 
+#' simulate the mean square errors for likelihood estimator and shrinkage 
+#' estimator for the mean of a Exponential distribution
+#'
+#' @param reps number of replications for this simulation
+#' @param n sample size
+#' @param mu mean of the Exponential distribution
+#'
+#' @return a vector containing simulated mean square errors for the two estimators
+#' (likelihood, shrinkage)
 sim_diff_lkh_shk = function(reps, n, mu) {
     x = rexp(reps * n, 1 / mu)
     x = matrix(x, reps, n)
@@ -356,7 +394,6 @@ sim_diff_lkh_shk = function(reps, n, mu) {
 n_vec = c(5, 10, 50)
 mu_vec = c(0.5, 1, 10)
 reps = 1000
-
 result = matrix(0, length(n_vec) * length(mu_vec), 6)
 colnames(result) = c("n", "mu", "sim_lkh_err", "sim_shk_est",
                      "lkh_err", "shk_est")
