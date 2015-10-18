@@ -138,6 +138,13 @@ set.seed(5701)
 
 \problem
 \subproblem
+In this problem we first make a R function called \m{confint\_sigma\_sq}, which directly implements the confidence interval formula given by the problem. The function \m{confint\_sigma\_sq} takes two parameters: \m{x} and \m{alpha}, where \m{x} is a vector of observations and $1 - \m{alpha}$ is the confidence level for the $\sigma ^2$. 
+
+Then, we make another R function called \m{sim\_confint\_sigma\_sq\_norm}, which simulates the confidence interval of $\sigma^2$ for i.i.d. normal random observations. There will be in total $\m{reps}$ replications in the simulation study. For each iteration, we first draw \m{n} random realizations from a normal distribution with mean \m{mu} and standard deviation \m{sigma}. Then we will estimate the $1 - \m{alpha}$ confidence interval of the $\sigma^2$ based on this realization, and record if the true $\sigma^2$ is within the confidence interval using $\{0, 1\}$ indicators. At the end of the simulation we will perform a proportional test for those indicators, and derive the \m{score\_conf} level confidence interval for the true proportion of 1's among all of them.
+
+After building these two functions, we will do simulation according the the problem.
+\newline
+
 <<p1.a>>=
 #' compute the confidence interval of sigma^2 given i.i.d. observations
 #'
@@ -190,9 +197,12 @@ alpha = 0.05
 score_conf = 0.99
 sim_confint_sigma_sq_norm(reps, n, mu, sigma, alpha, score_conf)
 @
-Here we could see the simulated 99\% confidence interval for the coverage probability is $(0.9399294, 0.9516740)$, which is very close to 0.95.  
+Here we could see the simulated 99\% confidence interval for the coverage probability is $(0.9399294, 0.9516740)$. Note that the target coverage probability 0.95 is inside the confidence interval, and the lower and upper bound for the interval are both very close to 0.95, which suggests that under this scenario, the formula gives a good confidence interval for $\sigma^2$.  
 
 \subproblem
+In this problem we will still use the function \m{confint\_sigma\_sq} to estimate the confidence interval. But we create another simulation function \m{sim\_confint\_sigma\_sq\_exp} to simulate the confidence interval of $\sigma^2$ for i.i.d. $\mathrm{Exp}(1)$ random observations. Note that this function is very close to function \m{sim\_confint\_sigma\_sq\_norm}, the only difference is that we draw sample from $\mathrm{Exp}(1)$ rather than a normal distribution.
+\newline
+
 <<p1.b>>=
 #' simulate the confidence interval of sigma^2 for i.i.d. Exp(1) random
 #' observations
@@ -239,8 +249,11 @@ result
 Here we could see the resulting confidence interval for the coverage probability is far away from $1 - \alpha$, which suggests that this is not a proper way to construct confidence interval of $\sigma^2$ for i.i.d. exponential random variables.
 
 \subproblem
+In this problem we will still use the function \m{confint\_sigma\_sq} to estimate the confidence interval. But we create another simulation function \m{sim\_confint\_sigma\_sq\_multinorm} to simulate the confidence interval of $\sigma^2$ for multivariate normal random observations. Note that this function is very close to function \m{sim\_confint\_sigma\_sq\_norm}, the only difference is that we draw sample from a multivariate normal distribtuion rather than a normal distribution.
+\newline
+
 <<p1.c>>=
-#' simulate the confidence interval of sigma^2 for multivariate random
+#' simulate the confidence interval of sigma^2 for multivariate normal random
 #' observations, with mean = rep(mu, n), covariance matrix var_mat, where
 #' var_mat[i, j] = sigma ^ 2 * rho ^ abs(i - j)
 #'
@@ -299,6 +312,9 @@ Here we could see the resulting confidence interval for the coverage probability
 
 \problem
 \subproblem
+In this problem we first make a function called \m{sim\_pval\_ttest}, which simulates p-values from a t-test scenario where two samples are drawn from normal distribution. Then, we make a function called \m{calc\_power} to calculate power of the t-test given a vector of simulated p-values.
+\newline
+
 <<p2.a, fig.width=6, fig.height=6, out.width='.5\\linewidth'>>=
 #' simulate p-values from a t-test scenario where two samples are drawn from 
 #' normal distribution
@@ -344,23 +360,27 @@ p_values = sim_pval_ttest(reps, n1, n2, mu1, mu2, sigma1, sigma2)
 hist(p_values)
 @
 
-The actual distribution of the random p-value is Unif$(0, 1)$. 
+From the histogram of the p-values, it seems that the actual distribution of the random p-value is Unif$(0, 1)$. We will prove it in the next line.
+
 \proof
 Note that if $u \sim \mathrm{Unif}(0, 1)$, $\mathrm{P}(u < \alpha) = \alpha, ~\forall \alpha \in [0, 1]$. 
 
 Let $p$ be the p-value, under $H_{0}$ we have
 \begin{equation*}
 \begin{aligned}
-    & \mathrm{P}(p < \alpha)\\
-    =~ & \mathrm{P}(t > T_{1 - \alpha / 2} ~ \mathrm{or} ~ t < T_{\alpha / 2})\\
-    =~ & \mathrm{P}(t > T_{1 - \alpha / 2}) + \mathrm{P}(t < T_{\alpha / 2})\\
+    & \mathrm{P}(p < \alpha | H_{0})\\
+    =~ & \mathrm{P}(t > T_{1 - \alpha / 2} ~ \mathrm{or} ~ t < T_{\alpha / 2}| H_{0})\\
+    =~ & \mathrm{P}(t > T_{1 - \alpha / 2}| H_{0}) + \mathrm{P}(t < T_{\alpha / 2}| H_{0})\\
     =~ & \alpha / 2 + \alpha / 2 \\
     =~ & \alpha
 \end{aligned}
 \end{equation*}
-i.e., $\forall \alpha \in [0, 1]$ $\mathrm{P}(p < \alpha) = \alpha$, which implies that p-value has a uniform distribution under $H_{0}$. Q.E.D.
+i.e., $\forall \alpha \in [0, 1]$ $\mathrm{P}(p < \alpha| H_{0}) = \alpha$, which implies that p-value has a uniform distribution under $H_{0}$. Q.E.D.
 
 \subproblem
+In this problem we first specify some potential values for $\mu_2$ and do simulation to get the approximate power for each corresponding $\mu_2$ value. Then we will extract those values that satisfies the condition specified by the problem.
+\newline
+
 <<p2.b>>=
 n1 = n2 = 50
 mu1 = 68
@@ -379,9 +399,12 @@ power_result[power_result < 1]
 mu2_vec[power_result < 1]
 @
 
-The sequence of values for $\mu_2$ we select is $68, 69, 70, 71$, and the corresponding power for these values are $0.050, 0.295, 0.855, 0.999$.
+The sequence of values for $\mu_2$ we select is $68, 69, 70, 71$, and the corresponding power for these values are $0.057, 0.249, 0.850, 0.997$.
 
 \subproblem
+In this problem we first specify some potential values for sample size \m{n} and do simulation to get the approximate power for each corresponding \m{n} value. Then we will extract those values that satisfies the condition specified by the problem.
+\newline
+
 <<2.c>>=
 mu1 = 68
 mu2 = 68.5
@@ -401,9 +424,12 @@ power_result[which.min(abs(power_result - 0.95))]
 n_vec[which.min(abs(power_result - 0.95))]
 @
 
-The sample size we find is 1110, with corresponding power 0.953.
+The sample size we find is 1090, with corresponding power 0.951.
 
 \subproblem
+In this problem use function \m{sim\_pval\_ttest} to simlulate the p-values for each scenario, and then draw QQ-plot and histogram to see that pattern of those p-values.
+\newline
+
 <<2.d.i, fig.width=8, fig.height=4, out.width='.95\\linewidth'>>=
 #' Draw qqplot (modified from Adam's code)
 #'
@@ -473,7 +499,21 @@ quantile(p_values, c(0.01, 0.05))
 In this scenario $n2 < n1$, which means sample with lower variance has larger sample size, and sample with higher variance has smaller sample size. The QQ-plot shows that the distribution is not uniform, it's a right-skewed distribution. The true 0.01, 0.05 data quantiles are significantly smaller than 0.01 and 0.05, which suggests that using 0.01 and 0.05 as cut values failed to protect the corresponding type I error.
 
 \subproblem
+In this problem we first create a function called \m{sim\_pval\_ttest\_multinorm} to simulate a vector of p-values from the t-test according to the problem. and then we will draw QQ-plot and histogram to show the pattern of the p-values.
+\newline
+
 <<p2.e, fig.width=8, fig.height=4, out.width='.95\\linewidth'>>=
+#' simulate p-values in a t-test scenario where data are generated from a 
+#' multivariate normal distribution
+#'
+#' @param reps number of replications in the simulation study
+#' @param n sample size for each group
+#' @param mu1 marginal mean for group 1
+#' @param mu2 marginal mean for group 2
+#' @param sigma marginal standard deviation for both groups
+#' @param rho decay parameter for the covariance between two grouops
+#'
+#' @return a vector of simulated p-values
 sim_pval_ttest_multinorm = function(reps, n, mu1, mu2, sigma, rho) {
     mu_vec = c(mu1, mu2)
     var_mat = matrix(0, 2, 2)
@@ -528,7 +568,7 @@ In this case $\rho = 0.1$, which is still a relatively low correlation among ran
     \Rightarrow l(x|\mu) &= \sum_{i = 1}^{n}{l(x_{i}|\mu)} = -n\log\mu - n\frac{\bar{x}}{\mu}
 \end{aligned}
 \end{equation*}
-Then set
+To maximize the log likelihood, we set its derivative to be 0:
 \begin{equation*}
 \begin{aligned}
     & \frac{\partial}{\partial \mu} l(x|\mu) = 0\\
@@ -568,6 +608,8 @@ Then set
 The shrinkage estimator has the smaller mean-squared error.
 
 \subproblem
+In this problem we will first draw sample from the exponential distribution, and then calculate the simulated mean square errors for the two estimators: maximum likelihood estimator and the shrinkage estimator. We will replicate this procedure in several different scenarios, and then compare our simulated result with the result derived from the formula.\newline
+
 <<p3.d>>=
 #' simulate the mean square errors for likelihood estimator and shrinkage 
 #' estimator for the mean of a Exponential distribution

@@ -18,10 +18,6 @@ checkStrict <- function(f, silent = FALSE) {
     ! any(found)
 }
 
-
-
-
-
 # 1 -----------------------------------------------------------------------
 
 
@@ -326,6 +322,17 @@ quantile(p_values, c(0.01, 0.05))
 
 ##2.e
 
+#' simulate p-values in a t-test scenario where data are generated from a 
+#' multivariate normal distribution
+#'
+#' @param reps number of replications in the simulation study
+#' @param n sample size for each group
+#' @param mu1 marginal mean for group 1
+#' @param mu2 marginal mean for group 2
+#' @param sigma marginal standard deviation for both groups
+#' @param rho decay parameter for the covariance between two grouops
+#'
+#' @return a vector of simulated p-values
 sim_pval_ttest_multinorm = function(reps, n, mu1, mu2, sigma, rho) {
     mu_vec = c(mu1, mu2)
     var_mat = matrix(0, 2, 2)
