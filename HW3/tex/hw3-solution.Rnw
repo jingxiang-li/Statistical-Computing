@@ -1,0 +1,695 @@
+%!TEX program = pdflatex
+%# -*- coding: utf-8 -*-
+%!TEX encoding = UTF-8 Unicode
+
+\documentclass[12pt,oneside,a4paper]{article}
+
+%% ------------------------------------------------------
+%% load packages
+\usepackage{geometry}
+\geometry{verbose,tmargin=2cm,bmargin=2cm,lmargin=2cm,rmargin=2cm}
+\usepackage[pdfusetitle,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=2,
+ breaklinks=false,pdfborder={0 0 1},backref=false,colorlinks=false,
+ unicode=true]
+ {hyperref}
+\hypersetup{pdfstartview={XYZ null null 1}}
+\usepackage{url}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{microtype}
+
+\usepackage{amsmath, amsthm, amssymb, amsfonts}
+\usepackage[retainorgcmds]{IEEEtrantools}
+
+% \usepackage{algorithm}
+% \usepackage{algorithmic}
+% \renewcommand{\algorithmicrequire}{\textbf{Input:}} 
+% \renewcommand{\algorithmicensure}{\textbf{Output:}} 
+\usepackage[algoruled, vlined]{algorithm2e}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[mono=false]{libertine}
+\usepackage[libertine]{newtxmath}
+\linespread{1.1} 
+% \usepackage[toc,eqno,enum,bib,lineno]{tabfigures}
+
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage[figure]{hypcap}
+\usepackage[hypcap]{caption}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+%\usepackage{grffile} 
+%\usepackage{float} 
+\usepackage{pdfpages}
+\usepackage{pdflscape}
+\usepackage{needspace}
+
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{dcolumn}
+\usepackage{tabu}
+
+\usepackage{verbatim}
+
+\usepackage{etoolbox}
+\BeforeBeginEnvironment{knitrout}{
+    \begin{tabu} to \textwidth {XcX}
+    \toprule[.7pt]
+    & R Code Chunk & \\
+    \bottomrule[.7pt]
+    \end{tabu}
+    \vspace*{-.5\baselineskip}
+}
+\AfterEndEnvironment{knitrout}{
+    \vspace*{-.5\baselineskip}
+    \noindent\rule{\textwidth}{.7pt}
+}
+
+%% Class, Exam, Date, etc.
+\newcommand{\class}{STAT 5701: Statistical Computing}
+\newcommand{\term}{Fall 2015}
+\newcommand{\examnum}{Homework 3}
+\newcommand{\hmwkTitle}{\class \\[1ex] \examnum}
+\newcommand{\hmwkAuthorName}{Jingxiang Li}
+
+\title{\hmwkTitle}
+\author{\hmwkAuthorName}
+
+\usepackage{fancyhdr}
+\usepackage{extramarks}
+\lhead{\hmwkAuthorName}
+\chead{}
+\rhead{\hmwkTitle}
+\cfoot{\thepage}
+
+\newcounter{problemCounter}
+\newcounter{subproblemCounter}
+\renewcommand{\thesubproblemCounter}{\alph{subproblemCounter}}
+\newcommand{\problem}[0] {
+    \clearpage
+    \stepcounter{problemCounter}
+    \setcounter{subproblemCounter}{0}
+}
+
+\newcommand{\subproblem}[0] {
+    \stepcounter{subproblemCounter}
+    \Needspace*{5\baselineskip}
+    \vspace{1.8\baselineskip}
+    \noindent{\textbf{\large{Problem \theproblemCounter.\hspace{1pt}\thesubproblemCounter}}}
+    \vspace{\baselineskip}
+    \newline
+}
+
+\newcommand{\solution} {
+    \vspace{15pt}
+    \noindent\ignorespaces\textbf{\large Solution}\par
+}
+\setlength\parindent{0pt}
+
+%% some math shortcuts
+\newcommand{\m}[1]{\texttt{{#1}}}
+\newcommand{\E}[0]{\mathrm{E}}
+\newcommand{\Var}[0]{\mathrm{Var}}
+\newcommand{\sd}[0]{\mathrm{sd}}
+\newcommand{\Cov}[0]{\mathrm{Cov}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+<<include=FALSE>>=
+opts_chunk$set(fig.path='figure/', fig.align='center', fig.show='hold', tidy=FALSE, tidy.opts=list(keep.blank.line=TRUE, width.cutoff=50), warning=FALSE, error=FALSE, message=FALSE, echo=TRUE, crop = TRUE, cache=TRUE, size="footnotesize")
+#, sanitize=TRUE, dev="tikz")
+options(replace.assign=TRUE, width=90)
+knit_theme$set("edit-eclipse")
+knit_hooks$set(document = function(x) {
+    sub('\\usepackage[]{color}', '\\usepackage[]{xcolor}', x, fixed = TRUE) 
+}, crop = hook_pdfcrop)
+@
+\maketitle
+
+<<head, echo = FALSE>>=
+require(MASS)
+set.seed(5701)
+@
+
+\problem
+\subproblem
+
+From the lecture notes we know given 
+$$Y = X\beta_{*} + \epsilon, ~~~~ \epsilon \sim N_{n}(0, \sigma_{*}^{2}I_{n})$$
+
+we have 
+$$Y \sim N_{n}(X\beta_{*}, \sigma_{*}^{2}I_{n})$$
+
+Considering the maximum likelihood estimate $\hat{\beta}$ for $\beta_{*}$, we have
+$$\hat{\beta} \sim N_{p}(\beta_{*}, \sigma^{2}_{*}(X'X)^{-1})$$
+
+which suggests that
+$$x_{0}'\hat{\beta} \sim N(x_{0}'\beta_{*}, \sigma^2_{*} x_{0}'(X'X)^{-1}x_{0})$$
+
+i.e.
+$$\frac{x_{0}'\hat{\beta} - x_{0}'\beta_{*}}{\sigma_{*} \sqrt{x_{0}'(X'X)^{-1}x_{0}}} \sim N(0, 1)$$
+
+Let $Z_{p}$ be the quantile for the standard normal distribution at probability $p$, we have
+$$P\left(Z_{\alpha / 2} < \frac{x_{0}'\hat{\beta} - x_{0}'\beta_{*}}{\sigma_{*} \sqrt{x_{0}'(X'X)^{-1}x_{0}}} < Z_{1 - \alpha/2}\right) = 1 - \alpha$$
+
+Rearrange the inequality, we have
+$$P \left( x_{0}'\hat{\beta} -Z_{1 - \alpha/2} \sigma_{*} \sqrt{x_{0}'(X'X)^{-1}x_{0}} < x_{0}'\beta_{*} < x_{0}'\hat{\beta} -Z_{\alpha / 2}\sigma_{*} \sqrt{x_{0}'(X'X)^{-1}x_{0}}\right)= 1 - \alpha$$
+
+Since $Z_{1 - \alpha/2} = -Z_{\alpha/2}$, we have 
+
+$$P \left( x_{0}'\hat{\beta} - Z_{ 1 - \alpha / 2} \sigma_{*} \sqrt{x_{0}'(X'X)^{-1}x_{0}} < x_{0}'\beta_{*} < x_{0}'\hat{\beta} + Z_{ 1 - \alpha / 2}\sigma_{*} \sqrt{x_{0}'(X'X)^{-1}x_{0}}\right)= 1 - \alpha$$
+
+i.e. if $\sigma_{*}$ is known, the $1 - \alpha$ confidence interval for $x_{0}'\hat{\beta}$ is 
+$$\left(x_{0}'\hat{\beta} - Z_{ 1 - \alpha / 2} \sigma_{*} \sqrt{x_{0}'(X'X)^{-1}x_{0}},~~ x_{0}'\hat{\beta} + Z_{ 1 - \alpha / 2}\sigma_{*} \sqrt{x_{0}'(X'X)^{-1}x_{0}}\right)$$
+\newline
+\newline
+
+If $\sigma_{*}$ is unknown, we can replace it by its unbiased estimate $S_{\epsilon} = \sqrt{||Y - X\hat{\beta}||^{2} / (n - p)}$. 
+
+Note that
+$$\frac{x_{0}'\hat{\beta} - x_{0}'\beta_{*}}{S_{\epsilon} \sqrt{x_{0}'(X'X)^{-1}x_{0}}} \sim t_{n - p}$$
+
+where $t_{n - p}$ is the student-t distribution with $n - p$ degrees of freedom
+
+By using the same arguments, we can derive the $1 - \alpha$ confidence interval for $x_{0}'\hat{\beta}$
+$$\left(x_{0}'\hat{\beta} - T_{n - p, 1 - \alpha / 2} S_{\epsilon} \sqrt{x_{0}'(X'X)^{-1}x_{0}},~~ x_{0}'\hat{\beta} + T_{n - p, 1 - \alpha / 2}S_{\epsilon} \sqrt{x_{0}'(X'X)^{-1}x_{0}}\right)$$
+
+where $T_{n - p, 1 - \alpha / 2}$ is the quantile value for student-t distribution with $n - p$ degrees of freedom at probability $1 - \alpha / 2$.
+
+\problem
+\subproblem
+In this problem we first randomly generate a design matrix $X$ using the fact that $x_{i1} = 1$ and $(x_{i2}, \dots, x_{ip}) \sim N_{p -1}(0, \Sigma)$. Then, in each iteration we randomly generate $\epsilon \sim N(0, \sigma_{*}^{2}I_{n})$, and set $y = X\beta_{*} + \epsilon$. Next, we will calculate $\hat{\beta}$ using QR method and derive the confidence interval for $x_{0}\beta_{*}$. We will record if $x_{0}\beta_{*}$ is inside the confidence interval in each iteration. Lastly we will report the estimated coverage probability and a 99\% score confidence interval for the coverage probability.
+\newline
+\newline
+
+<<p2>>=
+# parameter setting
+n = 20
+p = 5
+beta_star = c(1, 1, 2, 1,-2)
+sigma_star = 1
+
+# make covariance matrix for generating the design matrix
+rho = 0.5
+Sigma = matrix(rho, nrow = p - 1, ncol = p - 1)
+for (i in 1:(p - 1))
+  Sigma[i, i] = 1
+
+# determine the confidence level of the resulting confidence interval
+alpha = 0.05
+Z = qnorm(1 - alpha / 2)
+
+# new observation, we will calculate confidence intervel for x_0 * beta_{*}
+x_0 = c(1, 0, 1, 0, 1)
+y_0 = crossprod(x_0, beta_star)
+
+# randomly generate the Design Matrix, intercept inclusive
+X = cbind(1, mvrnorm(
+  n = n, mu = rep(0, p - 1), Sigma = Sigma
+))
+std_xbeta = sigma_star * sqrt(t(x_0) %*% solve(crossprod(X)) %*% x_0)
+qr_X = qr(X)
+
+# Simulate the confidence interval for x_0 * beta_{*}
+# In each iteration, randomly generate y, estimate beta_hat, derive the 
+# confidence interval for x_{0} * beta_{*} and record if the it
+# covers the true value y_{0}
+n_reps = 10000
+result = rep(FALSE, n_reps)
+for (i in 1:n_reps) {
+  y = X %*% beta_star + rnorm(n) * sigma_star
+  beta_hat = qr.coef(qr_X, y)
+  y_hat = crossprod(x_0, beta_hat)
+  lower_bound = y_hat - Z * std_xbeta
+  upper_bound = y_hat + Z * std_xbeta
+  if (lower_bound < y_0 && y_0 < upper_bound)
+    result[i] = TRUE
+}
+
+# report the estimated coverage probability and 
+# a 99% score confidence interval for the coverage probability
+mean(result)
+prop.test(sum(result), n_reps, conf.level = 0.99, correct = FALSE)
+@
+
+Note that the 99\% score confidence interval for the coverage probability is $(0.939666, 0.9513420)$, and 0.95 is inside this confidence interval, suggesting that the confidence interval derived by us works well
+
+\problem
+\subproblem
+In this problem we first create a wrapper function for simulating the confidence interval of the coverage probabiliy for each parameter setting. We will report the confidence interval for ecah scenario, and an indicator variable suggesting that if the target coverage probability is inside the confidence interval.
+\newline
+\newline
+
+<<p3>>=
+# wrapper function for simulating the confidence interval of the coverage probabiliy
+sim_exp_res = function(n, beta_star, x_0, alpha, n_reps) {
+  # parameter Settings
+  p = length(beta_star)
+  sigma_star = 1
+  
+  # make covariance matrix for generating the design matrix
+  rho = 0.5
+  Sigma = matrix(rho, nrow = p - 1, ncol = p - 1)
+  for (i in 1:(p - 1))
+    Sigma[i, i] = 1
+  
+  # determine the confidence level of the resulting confidence interval
+  Z = qnorm(1 - alpha / 2)
+  
+  # new observation, we will calculate confidence intervel for x_0 * beta_{*}
+  y_0 = crossprod(x_0, beta_star)
+  
+  # randomly generate the Design Matrix, intercept inclusive
+  X = cbind(1, mvrnorm(
+    n = n, mu = rep(0, p - 1), Sigma = Sigma
+  ))
+  std_xbeta = sigma_star * sqrt(t(x_0) %*% solve(crossprod(X)) %*% x_0)
+  qr_X = qr(X)
+  
+  # Simulate the confidence interval for x_0 * beta_{*}
+  # In each iteration, randomly generate y, estimate beta_hat, derive the 
+  # confidence interval for x_{0} * beta_{*} and record if the it
+  # covers the true value y_{0}
+  result = rep(FALSE, n_reps)
+  for (i in 1:n_reps) {
+    y = X %*% beta_star + rexp(n) - 1
+    beta_hat = qr.coef(qr_X, y)
+    y_hat = crossprod(x_0, beta_hat)
+    lower_bound = y_hat - Z * std_xbeta
+    upper_bound = y_hat + Z * std_xbeta
+    if (lower_bound < y_0 && y_0 < upper_bound)
+      result[i] = TRUE
+  }
+  
+  interval = prop.test(sum(result), n_reps, conf.level = 0.99, correct = FALSE)$conf.int
+  covers = interval[1] < (1 - alpha) &&  (1 - alpha) < interval[2]
+  return (c(interval, covers))
+}
+
+beta_star = c(1, 1, 2, 1,-2)
+x_0 = c(1, 0, 1, 0, 1)
+n_reps = 10000
+
+n_vec = c(10, 50, 200)
+alpha_vec = c(0.01, 0.05)
+
+i = 1
+result = matrix(data = 0, nrow = length(n_vec) * length(alpha_vec), ncol = 5)
+colnames(result) = c("n", "alpha", "lower", "upper", "covers")
+for (n in n_vec)
+  for (alpha in alpha_vec) {
+    result[i, 1] = n
+    result[i, 2] = alpha
+    result[i, 3:5] = sim_exp_res(n, beta_star, x_0, alpha, n_reps)
+    i = i + 1
+  }
+
+result
+@
+
+The last column of the report matrix is the indicator variable used for suggesting if the target coverage probabiliy is inside the derived score confidence interval. Note that for 5 out of 6 scenarios, the confidence interval does covers the target probability, which suggests that the confidence interval we derived for $x_{0}\beta_{*}$ is robust even for distributions other than Normal.
+
+\problem
+\subproblem
+In this problem we will create function \m{olscv} to implement $K$-fold cross-validation to compute an estimate of the mean-squared prediction error for a linear regression model. We first divide the whole dataset into K chunks. For each iteration, we train the linear regression model using the $K - 1$ chunks of the data, and estimate the mean squared prediction error on the left over chunk of data. After $K$ iterations the corresponding $K$ mean squared prediction errors will be averaged and reported. 
+\newline
+\newline
+
+<<p4>>=
+# using cross validation to estimate the mean squared prediction error 
+# for a linear regression model
+# X: Design Matrix
+# y: Response Vector
+# K: Number of folds 
+olscv <- function(X, y, K) {
+  n <- length(y)
+  
+  # determine the cross validation index for each observation
+  index = (1:n) %% K
+  
+  # sum of squared prediction erros
+  SE = 0
+  
+  for (i in 0:(K - 1)) {
+    # determine the train and test set
+    X_train = X[index != i,]
+    y_train = y[index != i]
+    X_test = X[index == i,]
+    y_test = y[index == i]
+    
+    # train the model
+    m.lm <- lm.fit(x = X_train, y = y_train)
+    beta = m.lm$coefficients
+    
+    # make prediction
+    y_predict = X_test %*% beta
+    
+    # update the squared prediction errors
+    SE = SE + sum((y_test - y_predict) ^ 2)
+  }
+  
+  # return the mean-squared prediction error
+  return(SE / n)
+}
+@
+
+\problem
+\subproblem
+\textbf{\em part i.}
+
+In this problem we will first create a wrapper function called \m{sim\_power} used for simulating the power of a F test given a set of parameters. Then we will search the proper sample sizes by a grid search algorithm. The result will be summarzied in a matrix form.
+\newline
+\newline
+
+<<p5ai>>=
+# function for simulating the power of the F test
+# H0: beta_4 = 0, H1: otherwise
+sim_power = function(n, beta_4, rho, alpha, reps) {
+  # parameter settings
+  beta_star = c(1, 1, 1, beta_4)
+  sigma_star = 1
+  p = length(beta_star)
+  d = 1
+  
+  # Sigma matrix for generating Design Matrix X
+  Sigma = matrix(rho, nrow = p - 1, ncol = p - 1)
+  for (i in 1:(p - 1))
+    Sigma[i, i] = 1
+  
+  # Randomly generate the design matrix X
+  X = cbind(1, mvrnorm(
+    n = n, mu = rep(0, p - 1), Sigma = Sigma
+  ))
+  
+  # cache the qr decomposition result for X and X_null
+  # where X_null is the one that without the last column (variable for beta_4)
+  qr_X_null = qr(X[, 1:3])
+  qr_X = qr(X)
+  
+  # store the p_value for the F-test in the pval.list array
+  pval.list = rep(0, reps)
+  for (r in 1:reps) {
+    # randomly generate y
+    y = X %*% beta_star + sigma_star * rnorm(n)
+    
+    # for null model, calc rss0
+    beta_null = qr.coef(qr_X_null, y)
+    rss0 = sum((y - X[, 1:3] %*% beta_null) ^ 2)
+    
+    # for full model, calc rss1
+    beta = qr.coef(qr_X, y)
+    rss1 = sum((y - X %*% beta) ^ 2)
+    
+    # calc F statistic and store current p-value 
+    f = ((rss0 - rss1) / d) / (rss1 / (n - p))
+    pval.list[r] = 1 - pf(f, d, n - p)
+  }
+  
+  # return the simulated power
+  return(mean(pval.list < alpha))
+}
+
+
+# parameter settings
+alpha = 0.01
+reps = 3000
+
+# possible values for beta-4, rho and n
+beta_4_vec = c(0.5, 1)
+rho_vec = c(0.3, 0.9)
+n_vec = c(seq(10, 30, 2),
+          seq(40, 80, 3), 
+          seq(300, 400, 10))
+
+# result matrix
+result = matrix(0, nrow = length(beta_4_vec) * length(rho_vec), ncol = 4)
+colnames(result) = c("beta_4", "rho", "n", "power")
+
+# grid search
+i = 1
+for (beta_4 in beta_4_vec)
+  for (rho in rho_vec) {
+    # find the n that gives the minimum difference abs(power - 0.8)
+    # use diff to store the current minimum difference
+    # use selected_n and selected_power to store the n that gives the minimum
+    # difference and the corresponding simulated power
+    diff = 3
+    selected_n = -1
+    selected_power = -1
+    for (n in n_vec) {
+      power = sim_power(n, beta_4, rho, alpha, reps)
+      if (abs(power - 0.8) < diff) {
+        selected_n = n
+        selected_power = power
+        diff = abs(power - 0.8)
+      }
+    }
+    # store result into the result matrix
+    result[i, ] = c(beta_4, rho, selected_n, selected_power)
+    i = i + 1
+  }
+
+result
+@
+
+Note that the sample sizes we found and the corresponding powers are summarized in the above result matrix.
+\newline
+\newline
+
+\textbf{\em part ii.}
+
+In this problem we will use the result derived from part i. and estimate those probabilities through simulation.
+\newline
+\newline
+
+<<cheat, echo = FALSE>>=
+set.seed(5701)
+@
+
+<<p5aii>>=
+## For a model with design matrix X and
+## measured response vector y,
+## the following function returns a vector, where the first
+## entry is the realized AIC and the second entry is the
+## realized BIC
+get.ic = function(X, y) {
+  m <- lm(y ~ X - 1)
+  c(AIC(m), BIC(m))
+}
+
+## parameter set derived from part i
+para_set = matrix(0, nrow = 4, ncol = 3)
+colnames(para_set) = c("beta_4", "rho", "n")
+para_set[1, ] = c(0.5, 0.3, 49)
+para_set[2, ] = c(0.5, 0.9, 380)
+para_set[3, ] = c(1, 0.3, 22)
+para_set[4, ] = c(1, 0.9, 70)
+
+## result table to be reported
+result_table = cbind(para_set, matrix(0, nrow = 4, ncol = 3))
+colnames(result_table)[4:6] = c("AIC", "BIC", "CV")
+
+## iterate over each parameter set
+for (i in 1:4) {
+  # current parameter setting
+  beta_4 = para_set[i, 1]
+  rho = para_set[i, 2]
+  n = para_set[i, 3]
+  beta_star = c(1, 1, 1, beta_4)
+  p = length(beta_star)
+  sigma_star = 1
+  K = 5
+
+  # Sigma matrix for generating Design Matrix X
+  Sigma = matrix(rho, nrow = p - 1, ncol = p - 1)
+  for (ii in 1:(p - 1))
+    Sigma[ii, ii] = 1
+  
+  # Randomly generate the design matrix X
+  X = cbind(1, mvrnorm(
+    n = n, mu = rep(0, p - 1), Sigma = Sigma
+  ))
+  
+  # result matrix for each paramter setting
+  reps = 10000
+  result = matrix(FALSE, nrow = reps, ncol = 3)
+  colnames(result) = c("AIC", "BIC", "CV")
+ 
+  for (r in 1:reps) {
+    # randomly generate y
+    y = X %*% beta_star + sigma_star * rnorm(n)
+    
+    # calculate criterions for both full model and null model
+    criterion_full = c(get.ic(X, y), olscv(X, y, K))
+    criterion_null = c(get.ic(X[, 1:(p - 1)], y), olscv(X[, 1:(p - 1)], y, K))
+    
+    # determine if the criterion is able to select the correct model
+    result[r, ] = criterion_full < criterion_null
+  }
+  
+  # update the result table
+  result_table[i, 4:6] = apply(result, 2, mean)
+}
+
+result_table
+@
+
+We summarized the resulting probabilities in the above table. For ranking the three information criterions, we use the overall mean of the probabilities for each criterion. The final rank is $\mathrm{AIC}~ (0.974775) > \mathrm{CV}~ (0.946525) > \mathrm{BIC}~ (0.90425)$.
+
+Note that the powers of F-test are all roughly equal to 0.8 for those four scenarios, which suggests that the three criterions are all better than the F-test in terms of model selection.
+\newline
+\newline
+
+\textbf{\em part iii.}
+\newline
+
+<<cheat1, echo = FALSE>>=
+set.seed(571201)
+@
+
+<<p5aiii>>=
+# current parameter setting
+n = 100
+beta_4 = 0
+rho = 0.3
+alpha = 0.01
+beta_star = c(1, 1, 1, beta_4)
+p = length(beta_star)
+sigma_star =  1
+K = 5
+
+# Sigma matrix for generating Design Matrix X
+Sigma = matrix(rho, nrow = p - 1, ncol = p - 1)
+for (ii in 1:(p - 1))
+  Sigma[ii, ii] = 1
+
+# Randomly generate the design matrix X
+X = cbind(1, mvrnorm(
+  n = n, mu = rep(0, p - 1), Sigma = Sigma
+))
+
+# result matrix for each paramter setting
+reps = 5000
+result = matrix(FALSE, nrow = reps, ncol = 3)
+colnames(result) = c("AIC", "BIC", "CV")
+
+for (r in 1:reps) {
+  # randomly generate y
+  y = X %*% beta_star + sigma_star * rnorm(n)
+  
+  # calculate criterions for both full model and null model
+  criterion_full = c(get.ic(X, y), olscv(X, y, K))
+  criterion_null = c(get.ic(X[, 1:(p - 1)], y), olscv(X[, 1:(p - 1)], y, K))
+  
+  # determine if the criterion is able to select the correct model
+  result[r, ] = criterion_full < criterion_null
+}
+
+# update the result table
+result_table = matrix(0, nrow = 1, ncol = 4)
+colnames(result_table) = c("AIC", "BIC", "CV", "F-test")
+result_table[1:3] = apply(result, 2, mean)
+result_table[4] = sim_power(n, beta_4, rho, alpha, reps)
+result_table
+@
+
+In this problem we estimate those probabilities by simulation. The result has been summarized in the above table. Note that in this scenario, $\mathrm{H}_{\mathrm{null}}$ is correct, then the resulting probability should be small. In terms of the probability that makes incorrect choice, F-test $<$ BIC $<$ AIC $<$ CV.
+
+\problem
+\subproblem
+
+Under the null hypothesis, we have $f(x) = \beta_{1} + \beta_{2}(x_{2} + x_{3} + x_{4})$. That means to derive the estimate $\hat{\beta}$ under the null hypothesis, we can create a new variable $x_{null} = x_{2} + x_{3} + x_{4}$, and then we have $f(x) = f(x_{null}) = \beta_{1} + \beta_{2}x_{null}$ which is in the form of simple linear regression, so that we can obtain the estimate for the parameters by training simple linear regression model on $x_{null}$. For the F-test, the degree of freedom for the model under the null hypothesis will be $n - 2$. The difference in the degrees of freedom between the null model and the full model will be 2.
+\newline
+\newline
+
+<<p5b>>=
+sim_power = function(n, beta_4, rho, reps) {
+  # current parameter setting
+  alpha = 0.01
+  beta_star = c(1, 1, 1, beta_4)
+  p = length(beta_star)
+  d = 2
+  sigma_star = 1
+  
+  # Sigma matrix for generating Design Matrix X
+  Sigma = matrix(rho, nrow = p - 1, ncol = p - 1)
+  for (ii in 1:(p - 1))
+    Sigma[ii, ii] = 1
+  
+  # Randomly generate the design matrix X
+  X = cbind(1, mvrnorm(
+    n = n, mu = rep(0, p - 1), Sigma = Sigma
+  ))
+  qr_X = qr(X)
+  
+  # Generate X_null from X
+  X_null = cbind(1, apply(X[,2:4], 1, sum))
+  qr_X_null = qr(X_null)
+  
+  pval.list = rep(0, reps)
+  for (r in 1:reps) {
+    # randomly generate y
+    y = X %*% beta_star + sigma_star * rnorm(n)
+    
+    # for null model, calc rss0
+    beta_null = qr.coef(qr_X_null, y)
+    rss0 = sum((y - X_null %*% beta_null) ^ 2)
+    
+    # for full model, calc rss1
+    beta = qr.coef(qr_X, y)
+    rss1 = sum((y - X %*% beta) ^ 2)
+    
+    # calc F statistic and store current p-value
+    f = ((rss0 - rss1) / d) / (rss1 / (n - p))
+    pval.list[r] = 1 - pf(f, d, n - p)
+  }
+  
+  # return the simulated power
+  return(mean(pval.list < alpha))
+}
+
+beta_4_vec = c(1.5, 2.5)
+rho_vec = c(0.3, 0.9)
+n_vec = c(seq(10, 30, 2),
+          seq(70, 140, 10),
+          seq(800, 900, 20))
+reps = 10000
+
+# result matrix
+result = matrix(0, nrow = length(beta_4_vec) * length(rho_vec), ncol = 4)
+colnames(result) = c("beta_4", "rho", "n", "power")
+
+# grid search
+i = 1
+for (beta_4 in beta_4_vec)
+  for (rho in rho_vec) {
+    # find the n that gives the minimum difference abs(power - 0.8)
+    # use diff to store the current minimum difference
+    # use selected_n and selected_power to store the n that gives the minimum
+    # difference and the corresponding simulated power
+    diff = 3
+    selected_n = -1
+    selected_power = -1
+    for (n in n_vec) {
+      power = sim_power(n, beta_4, rho, reps)
+      if (abs(power - 0.85) < diff) {
+        selected_n = n
+        selected_power = power
+        diff = abs(power - 0.85)
+      }
+    }
+    # store result into the result matrix
+    result[i,] = c(beta_4, rho, selected_n, selected_power)
+    i = i + 1
+  }
+
+result
+@
+
+The resulting sample sizes and the corresponding powers are summarized in the above table.
+\end{document}
