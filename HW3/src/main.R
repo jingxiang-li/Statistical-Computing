@@ -137,7 +137,7 @@ olscv <- function(X, y, K) {
   n <- length(y)
   
   # determine the cross validation index for each observation
-  index = (1:n) %% K
+  index = sample(1:n) %% K
   
   # sum of squared prediction erros
   SE = 0

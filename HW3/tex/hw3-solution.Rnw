@@ -330,7 +330,7 @@ olscv <- function(X, y, K) {
   n <- length(y)
   
   # determine the cross validation index for each observation
-  index = (1:n) %% K
+  index = sample(1:n) %% K
   
   # sum of squared prediction erros
   SE = 0
@@ -417,15 +417,15 @@ sim_power = function(n, beta_4, rho, alpha, reps) {
 
 # parameter settings
 alpha = 0.01
-reps = 3000
+reps = 10000
 
 # possible values for beta-4, rho and n
 beta_4_vec = c(0.5, 1)
 rho_vec = c(0.3, 0.9)
-n_vec = c(seq(10, 30, 2),
-          seq(40, 80, 3), 
-          seq(300, 400, 10))
-
+n_vec = list(seq(70, 80, 1),
+             seq(310, 320, 1),
+             seq(10, 20, 1),
+             seq(80, 90, 1))
 # result matrix
 result = matrix(0, nrow = length(beta_4_vec) * length(rho_vec), ncol = 4)
 colnames(result) = c("beta_4", "rho", "n", "power")
@@ -441,7 +441,7 @@ for (beta_4 in beta_4_vec)
     diff = 3
     selected_n = -1
     selected_power = -1
-    for (n in n_vec) {
+    for (n in n_vec[[i]]) {
       power = sim_power(n, beta_4, rho, alpha, reps)
       if (abs(power - 0.8) < diff) {
         selected_n = n
@@ -467,10 +467,6 @@ In this problem we will use the result derived from part i. and estimate those p
 \newline
 \newline
 
-<<cheat, echo = FALSE>>=
-set.seed(5701)
-@
-
 <<p5aii>>=
 ## For a model with design matrix X and
 ## measured response vector y,
@@ -485,10 +481,10 @@ get.ic = function(X, y) {
 ## parameter set derived from part i
 para_set = matrix(0, nrow = 4, ncol = 3)
 colnames(para_set) = c("beta_4", "rho", "n")
-para_set[1, ] = c(0.5, 0.3, 49)
-para_set[2, ] = c(0.5, 0.9, 380)
-para_set[3, ] = c(1, 0.3, 22)
-para_set[4, ] = c(1, 0.9, 70)
+para_set[1, ] = c(0.5, 0.3, 74)
+para_set[2, ] = c(0.5, 0.9, 317)
+para_set[3, ] = c(1, 0.3, 16)
+para_set[4, ] = c(1, 0.9, 83)
 
 ## result table to be reported
 result_table = cbind(para_set, matrix(0, nrow = 4, ncol = 3))
@@ -537,9 +533,11 @@ for (i in 1:4) {
 }
 
 result_table
+
+apply(result_table[, 4:6], 2, mean)
 @
 
-We summarized the resulting probabilities in the above table. For ranking the three information criterions, we use the overall mean of the probabilities for each criterion. The final rank is $\mathrm{AIC}~ (0.974775) > \mathrm{CV}~ (0.946525) > \mathrm{BIC}~ (0.90425)$.
+We summarized the resulting probabilities in the above table. For ranking the three information criterions, we use the overall mean of the probabilities for each criterion. The final rank is $\mathrm{AIC}~ (0.972425) > \mathrm{CV}~ (0.912875) > \mathrm{BIC}~ (0.900575)$.
 
 Note that the powers of F-test are all roughly equal to 0.8 for those four scenarios, which suggests that the three criterions are all better than the F-test in terms of model selection.
 \newline
@@ -548,11 +546,9 @@ Note that the powers of F-test are all roughly equal to 0.8 for those four scena
 \textbf{\em part iii.}
 \newline
 
-<<cheat1, echo = FALSE>>=
-set.seed(571201)
-@
-
 <<p5aiii>>=
+set.seed(5701)
+
 # current parameter setting
 n = 100
 beta_4 = 0
@@ -574,7 +570,7 @@ X = cbind(1, mvrnorm(
 ))
 
 # result matrix for each paramter setting
-reps = 5000
+reps = 10000
 result = matrix(FALSE, nrow = reps, ncol = 3)
 colnames(result) = c("AIC", "BIC", "CV")
 
@@ -600,7 +596,6 @@ result_table
 
 In this problem we estimate those probabilities by simulation. The result has been summarized in the above table. Note that in this scenario, $\mathrm{H}_{\mathrm{null}}$ is correct, then the resulting probability should be small. In terms of the probability that makes incorrect choice, F-test $<$ BIC $<$ AIC $<$ CV.
 
-\problem
 \subproblem
 
 Under the null hypothesis, we have $f(x) = \beta_{1} + \beta_{2}(x_{2} + x_{3} + x_{4})$. That means to derive the estimate $\hat{\beta}$ under the null hypothesis, we can create a new variable $x_{null} = x_{2} + x_{3} + x_{4}$, and then we have $f(x) = f(x_{null}) = \beta_{1} + \beta_{2}x_{null}$ which is in the form of simple linear regression, so that we can obtain the estimate for the parameters by training simple linear regression model on $x_{null}$. For the F-test, the degree of freedom for the model under the null hypothesis will be $n - 2$. The difference in the degrees of freedom between the null model and the full model will be 2.
