@@ -1,0 +1,416 @@
+%!TEX program = pdflatex
+%# -*- coding: utf-8 -*-
+%!TEX encoding = UTF-8 Unicode
+
+\documentclass[12pt,oneside,a4paper]{article}
+
+%% ------------------------------------------------------
+%% load packages
+\usepackage{geometry}
+\geometry{verbose,tmargin=2cm,bmargin=2cm,lmargin=2cm,rmargin=2cm}
+\usepackage[pdfusetitle,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=2,
+ breaklinks=false,pdfborder={0 0 1},backref=false,colorlinks=false,
+ unicode=true]
+ {hyperref}
+\hypersetup{pdfstartview={XYZ null null 1}}
+\usepackage{url}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{microtype}
+
+\usepackage{amsmath, amsthm, amssymb, amsfonts}
+\usepackage[retainorgcmds]{IEEEtrantools}
+\usepackage{bm}
+
+% \usepackage{algorithm}
+% \usepackage{algorithmic}
+% \renewcommand{\algorithmicrequire}{\textbf{Input:}} 
+% \renewcommand{\algorithmicensure}{\textbf{Output:}} 
+\usepackage[algoruled, vlined]{algorithm2e}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[mono=false]{libertine}
+\usepackage[libertine]{newtxmath}
+\linespread{1.1} 
+% \usepackage[toc,eqno,enum,bib,lineno]{tabfigures}
+
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage[figure]{hypcap}
+\usepackage[hypcap]{caption}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+%\usepackage{grffile} 
+%\usepackage{float} 
+\usepackage{pdfpages}
+\usepackage{pdflscape}
+\usepackage{needspace}
+
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{dcolumn}
+\usepackage{tabu}
+
+\usepackage{verbatim}
+
+\usepackage{etoolbox}
+\BeforeBeginEnvironment{knitrout}{
+    \begin{tabu} to \textwidth {XcX}
+    \toprule[.7pt]
+    & R Code Chunk & \\
+    \bottomrule[.7pt]
+    \end{tabu}
+    \vspace*{-.5\baselineskip}
+}
+\AfterEndEnvironment{knitrout}{
+    \vspace*{-.5\baselineskip}
+    \noindent\rule{\textwidth}{.7pt}
+}
+
+%% Class, Exam, Date, etc.
+\newcommand{\class}{STAT 5701: Statistical Computing}
+\newcommand{\term}{Fall 2015}
+\newcommand{\examnum}{Homework 4}
+\newcommand{\hmwkTitle}{\class \\[1ex] \examnum}
+\newcommand{\hmwkAuthorName}{Jingxiang Li}
+
+\title{\hmwkTitle}
+\author{\hmwkAuthorName}
+
+\usepackage{fancyhdr}
+\usepackage{extramarks}
+\lhead{\hmwkAuthorName}
+\chead{}
+\rhead{\hmwkTitle}
+\cfoot{\thepage}
+
+\newcounter{problemCounter}
+\newcounter{subproblemCounter}
+\renewcommand{\thesubproblemCounter}{\alph{subproblemCounter}}
+\newcommand{\problem}[0] {
+    \clearpage
+    \stepcounter{problemCounter}
+    \setcounter{subproblemCounter}{0}
+}
+
+\newcommand{\subproblem}[0] {
+    \stepcounter{subproblemCounter}
+    \Needspace*{5\baselineskip}
+    \vspace{1.8\baselineskip}
+    \noindent{\textbf{\large{Problem \theproblemCounter.\hspace{1pt}\thesubproblemCounter}}}
+    \vspace{\baselineskip}
+    \newline
+}
+
+\newcommand{\solution} {
+    \vspace{15pt}
+    \noindent\ignorespaces\textbf{\large Solution}\par
+}
+\setlength\parindent{0pt}
+
+%% some math shortcuts
+\newcommand{\m}[1]{\texttt{{#1}}}
+\newcommand{\E}[0]{\mathrm{E}}
+\newcommand{\Var}[0]{\mathrm{Var}}
+\newcommand{\sd}[0]{\mathrm{sd}}
+\newcommand{\Cov}[0]{\mathrm{Cov}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+<<include=FALSE>>=
+opts_chunk$set(fig.path='figure/', fig.align='center', fig.show='hold', tidy=FALSE, tidy.opts=list(keep.blank.line=TRUE, width.cutoff=50), warning=FALSE, error=FALSE, message=FALSE, echo=TRUE, crop = TRUE, cache=TRUE, size="footnotesize")
+#, sanitize=TRUE, dev="tikz")
+options(replace.assign=TRUE, width=90)
+knit_theme$set("edit-eclipse")
+knit_hooks$set(document = function(x) {
+    sub('\\usepackage[]{color}', '\\usepackage[]{xcolor}', x, fixed = TRUE) 
+}, crop = hook_pdfcrop)
+@
+\maketitle
+
+<<head, echo = FALSE>>=
+require(MASS)
+set.seed(5701)
+@
+
+\problem
+\subproblem
+<<p1.a>>=
+# ridge regression for a single rugularization paramter lam (lambda)
+# X, design matrix, first column to be all 1
+# y, response vector
+# lam, regularization parameter lambda
+lm.ridge = function(X, y, lam) {
+  n = nrow(X)
+  p = ncol(X)
+  xbar = apply(X[,-1], 2, mean)
+  ybar = mean(y)
+  Xtilde = scale(X[,-1], center = xbar, scale = FALSE)
+  ytilde = y - ybar
+  q = min(c(n - 1, p - 1))
+  out = svd(Xtilde, nu = q, nv = q)
+  H = diag(out$d / (out$d ^ 2 + lam))
+  bhatm1 = out$v %*% H %*% t(out$u) %*% ytilde
+  bhat1 = ybar - sum(xbar * bhatm1)
+  beta.hat = c(bhat1, bhatm1)
+  return(beta.hat)
+}
+@
+
+\subproblem
+<<p1.b>>=
+# given a beta vector, calculate the gradient of a ridge regression set
+# X, design matrix, first column all 1
+# y, response vector
+# lam, lambda
+# beta, coefficient vector
+lm.ridge.grad = function(X, y, lam, beta) {
+  grad.loss = -2 * crossprod(X, y - X %*% beta)
+  grad.reg = 2 * lam * beta
+  grad.reg[1] = 0
+  return(grad.loss + grad.reg)
+}
+
+
+n = 50
+p = 5
+sigma.star = 1
+
+beta.star = rnorm(p, mean = 0, sd = sqrt(0.05))
+X = cbind(1, matrix(rnorm(n * (p - 1)), nrow = n, ncol = p - 1))
+y = X %*% beta.star + rnorm(n) * sigma.star
+lambda = 1
+
+beta.hat = lm.ridge(X, y, lambda)
+grad = lm.ridge.grad(X, y, lambda, beta.hat)
+cat("lambda :", lambda,
+    "\nbeta.hat :", beta.hat,
+    "\ngradient :", grad)
+@
+
+Here I summarize the gradient at $\hat{\beta}^{(\lambda)}$ in the above code chunk, note that the gradient is very close to 0, which suggeests that the event $\nabla f(\hat{\beta}^{(\lambda)}) = 0$ occured.
+
+\subproblem
+In this problem we first define a function \m{lm.ridge1} which calculates the coefficient matrix for a vector of lambda's, and then define function \m{lm.ridge.cv} that implements the cross validation for ridge regression.\newline\newline
+
+<<p1.c>>=
+# given a vector of lambda's, return a coefficient matrix
+# for each lambda value as a matrix
+# X, design matrix, first column all 1
+# y, response vector
+# lam.vec, a vector of lambda value to be tuned
+lm.ridge1 = function(X, y, lam.vec) {
+  n = nrow(X)
+  p = ncol(X)
+  xbar = apply(X[,-1], 2, mean)
+  ybar = mean(y)
+  Xtilde = scale(X[,-1], center = xbar, scale = FALSE)
+  ytilde = y - ybar
+  q = min(c(n - 1, p - 1))
+  out = svd(Xtilde, nu = q, nv = q)
+  beta.hat.matrix = matrix(0, nrow = p, ncol = length(lam.vec))
+  for (j in 1:length(lam.vec))
+  {
+    H = diag(out$d / (out$d ^ 2 + lam.vec[j]))
+    bhatm1 = out$v %*% H %*% t(out$u) %*% ytilde
+    bhat1 = ybar - sum(xbar * bhatm1)
+    beta.hat.matrix[, j] = c(bhat1, bhatm1)
+  }
+  return(beta.hat.matrix)
+}
+
+# run cv to find the best lambda
+# X, design matrix, first column all 1
+# y, response vector
+# lam.vec, a vector of lambda value to be tuned
+# K, number of folds
+lm.ridge.cv = function(X, y, lam.vec, K) {
+  n = nrow(X)
+  p = ncol(X)
+  cv.err = rep(0, length(lam.vec))
+  
+  order_index = sample.int(n)
+  for (k in 0:(K - 1)) {
+    test.index = order_index %% K == k
+    X.test = X[test.index,]
+    y.test = y[test.index]
+    X.train = X[!test.index,]
+    y.train = y[!test.index]
+    
+    beta.mat = lm.ridge1(X.train, y.train, lam.vec)
+    err.mat = y.test %*% t(rep(1, length(lam.vec))) -
+      X.test %*% beta.mat
+    
+    cv.err = cv.err + apply(err.mat, 2, function(x) {
+      sum(x ^ 2)
+    })
+  }
+  
+  cv.err = cv.err / n
+  best.lam = lam.vec[which.min(cv.err)]
+  
+  result = list()
+  result$b = lm.ridge(X, y, best.lam)
+  result$best.lam = best.lam
+  result$cv.error = cv.err
+  return(result)
+}
+@
+
+\subproblem
+<<p1.d>>=
+set.seed(5701)
+n = 100
+p = 50
+theta = 0.7
+lambda.vec = 10 ^ seq(-8, 8)
+K.vec = c(0, 5, 10, n)
+
+Sigma = matrix(0, nrow = p - 1, ncol = p - 1)
+for (i in 1:(p - 1))
+  for (j in 1:(p - 1)) {
+    Sigma[i, j] = theta ^ abs(i - j)
+  }
+
+X = cbind(1, mvrnorm(n, mu = rep(0, p - 1), Sigma = Sigma))
+beta.star = rnorm(p, mean = 0, sd = 1 / sqrt(p))
+y.expected = X %*% beta.star
+
+nreps = 200
+loss1.mat = matrix(0, nrow = nreps, ncol = length(K.vec))
+loss2.mat = matrix(0, nrow = nreps, ncol = length(K.vec))
+for (r in 1:nreps) {
+  # print(r)\
+  y = y.expected + rnorm(n)
+  for (i in 1:length(K.vec)) {
+    K = K.vec[i]
+    if (0 == K) {
+      beta.hat = lm.fit(X, y)$coefficients
+    } else {
+      m.ridge = lm.ridge.cv(X, y, lambda.vec, K)
+      beta.hat = m.ridge$b
+    }
+    loss1.mat[r, i] = sum((beta.star - beta.hat) ^ 2)
+    loss2.mat[r, i] = sum((y.expected - X %*% beta.hat) ^ 2)
+  }
+}
+
+cat("mean :", c(apply(loss1.mat, 2, mean),
+                apply(loss2.mat, 2, mean)))
+cat("SE :", c(sqrt(apply(loss1.mat, 2, var) / nreps),
+              sqrt(apply(loss2.mat, 2, var) / nreps)))
+@
+
+Here I summarized the mean and SE in the above code chunk. From the simulation result we could see that ridge regression consistently performs better than OLS, suggesting that ridge-penalization is helpful. Considering the best value for $K$, empirically $K = 5$ gives the best result. However, the differences among different $K$ values are negligible.
+
+\problem
+\subproblem
+Knowing that 
+$$\nabla\left\{\log\left(\frac{1}{1 + \exp(-t)} \right)\right\} = \frac{1}{1 + \exp(t)}$$
+and
+$$\nabla\left\{\log\left(1 - \frac{1}{1 + \exp(-t)} \right)\right\} = -\frac{\exp(t)}{1 + \exp(t)}$$
+We have
+\begin{equation*}
+\nabla \ell(\beta) = \sum_{i = 1}^{n}{n_{i}y_{i}x_{i}\frac{1}{\exp(x_{i}'\beta)}} + \sum_{i = 1}^{n}{(n_{i} - n_{i}y_{i})x_{i} (-\frac{\exp(x_{i}'\beta)}{1 + \exp(x_{i}'\beta)})}
+\end{equation*}
+Let
+$$p_{i} = \frac{\exp(x_{i}'\beta)}{1 + \exp(x_{i}'\beta)}$$
+We have 
+\begin{equation*}
+\begin{aligned}
+\nabla \ell(\beta) &= \sum_{i = 1}^{n}{n_{i}y_{i}x_{i}(1 - p_{i})} + \sum_{i = 1}^{n}{(n_{i} - n_{i}y_{i})x_{i} (-p_{i})}\\
+&= \sum_{i = 1}^{n}{n_{i}y_{i}x_{i} - n_{i}p_{i}x_{i}} \\
+&= \sum_{i = 1}^{n}{n_{i}(y_{i} - p_{i})x_{i}} \\
+&= X^{T}(n \circ (y - p))
+\end{aligned}
+\end{equation*}
+
+Then for function
+$$f(\beta) = -\ell(\beta) + \frac{\lambda}{2}\sum_{j = 2}^{p}(\beta_{j} - t_{j})^{2}$$
+It's easy to have the gradient
+$$\nabla f(\beta) = -X^{T}(n \circ (y - p)) + \lambda(m \circ (\beta - t))$$
+where $m = (0, 1, \dots, 1)^{T} \in \mathbb{R}^{p}$
+
+Therefore we can define a gradient descent algorithm for training the logistic regression model.
+\begin{enumerate}
+\item Input: $X$, $y$, $n$, $\lambda$, $t$, \m{tol}, \m{maxit}
+\item Initialize: $\beta_{0}$, $i = 1$
+\item while $i$ < \m{maxit}
+\item \hspace{2ex} $p = \frac{\exp(x'\beta_{i})}{1 + \exp(x'\beta_{i})}$
+\item \hspace{2ex} $g = -X^{T}(n \circ (y - p)) + \lambda(m \circ (\beta - t))$
+\item \hspace{2ex} $\eta = \frac{1}{\sqrt{i}}$
+\item \hspace{2ex} $\beta_{i + 1} = \beta_{i} - \eta g$
+\item \hspace{2ex} $i = i + 1$
+\item \hspace{2ex} if \m{sum(abs($g$))} < \m{tol}
+\item \hspace{4ex} break
+\item return $\beta_{i}$
+\end{enumerate}
+
+Here we first define function \m{logis.grad} that calculates the gradient of logistic regression, and then define function \m{glm.logis} that train the logistic model.\newline\newline
+
+<<p2.a>>=
+# calculate the gradient of logistic regression
+logis.grad = function(beta, X, y, n.list, lambda, t.list, ...) {
+  prob.list = 1 / (1 + exp(-X %*% beta))
+  grad.loss = -crossprod(X, n.list * (y - prob.list))
+  
+  beta1 = beta[2:length(beta)]
+  grad.reg = c(0, lambda * (beta1 - t.list))
+  return(grad.loss + grad.reg)
+}
+
+# train the logistic regression
+glm.logis = function(X, y, n.list, lam, t.list, tol, maxit, ...) {
+  n = nrow(X)
+  p = ncol(X)
+  beta = runif(p, -1, 1)
+
+  for (iter in 1:maxit) {
+    grad = logis.grad(beta, X, y, n.list, lam, t.list)
+    eta = 1 / sqrt((lambda + 1) * iter)
+    beta.new = beta - eta * grad
+    beta = beta.new
+    
+    if (sum(abs(grad)) < tol)
+      break
+  }
+  return(list(b = beta, total.iterations = iter))
+}
+@
+
+\clearpage
+\subproblem
+In this problem we set $n = 100$, $p = 50$, $n_{1}, \dots, n_{n} = Z + 1$ where $Z \sim \mathrm{Poission}(9)$, $X_{2}, \dots, X_{p} \sim \mathrm{i.i.d.}~~ \mathrm{N}(0, 1)$, $\beta_{*} \sim \mathrm{i.i.d.} ~ N(0, p^{-1})$, $t_{2} = \dots = t_{p} = 0$, $\lambda = 4$
+\newline\newline
+
+<<p2.b>>=
+set.seed(5701)
+n = 100
+p = 10
+
+n.list = rpois(n, 9) + 1
+X = cbind(1, 
+          matrix(rnorm(n * (p - 1)), nrow = n, ncol = p - 1))
+beta.star = rnorm(p, sd = sqrt(1 / p))
+prob.list = 1 / (1 + exp(-X %*% beta.star))
+y = numeric(n)
+for (i in 1:n) {
+  y[i] = rbinom(1, n.list[i], prob.list[i]) / n.list[i]
+}
+t.list = rep(0, p - 1)
+lambda = 4
+tol = 1e-07
+maxit = 1e+04
+
+m = glm.logis(X, y, n.list, lambda, t.list, tol, maxit)
+m$total.iterations
+data.frame(beta.star, beta.hat = m$b, 
+           grad = logis.grad(m$b, X, y, n.list, lambda, t.list))
+@
+
+We summarized $\beta_{*}$, $\hat{\beta}$, and gradient at $\hat{\beta}$ in the above code chunk, note that the gradient is almost 0, which suggests the final iterate (4811) approximately a stationary point of the objective function. 
+\end{document}
