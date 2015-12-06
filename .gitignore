@@ -4,6 +4,7 @@
 
 # Example code in package build process
 *-Ex.R
+*.RData
 
 # RStudio files
 *.Rproj
@@ -43,5 +44,3 @@ vignettes/*.pdf
 *.synctex.gz
 *.tex
 *.pdf
-
-.Rproj.user
