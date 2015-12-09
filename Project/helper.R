@@ -63,7 +63,9 @@ plot.feature.freq <- function(beta, X, func.feature, nreps, ...) {
     coef.freq = coef.freq + coef.nonzero
   }
   barplot(coef.freq, col = (beta != 0), 
-          ylab = "selection frequency", xlab = "features", ...)
+          ylab = "Selection Frequency", xlab = "Features", 
+          ylim = c(0, nreps), space = 0.2, ...)
+  axis(1, labels = seq(5, 50, 5), at = seq(5, 50, 5) * 1.2)
   return(coef.freq)
 }
 
