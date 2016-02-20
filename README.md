@@ -4,4 +4,6 @@ Email: lixx3899@umn.edu
 
 =============================================================================
 
-This repository only contains homework files for STAT 5701
+This repository contains homework files for STAT 5701
+
+You can find multiple R scripts and tex source files
